@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>EASYDAY</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one narrow column (720px). Hero slogan with highlighter mark, 3-tab switch, hairline cards; timeline = date rail + checkable items. */
+:root{
+  --bg:#F2F5F7; --surface:#FFFFFF; --field:#F7F9FA; --fg:#12202B; --muted:#5A6A77; --line:#DCE3E8;
+  --hi:#FFD84A; --hi-ink:#12202B; --btn-bg:#12202B; --btn-fg:#FFFFFF; --bar:#B9C5CE;
+  --ok:#1E7F53; --warn:#A8520A;
+  --font-display:"Black Han Sans","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --font-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E161D; --surface:#151F28; --field:#0F1820; --fg:#E7EDF2; --muted:#93A3B0; --line:#26343F;
+    --hi:#FFD84A; --hi-ink:#121A21; --btn-bg:#FFD84A; --btn-fg:#121A21; --bar:#3A4B58;
+    --ok:#4CC38A; --warn:#F0A04B; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E161D; --surface:#151F28; --field:#0F1820; --fg:#E7EDF2; --muted:#93A3B0; --line:#26343F;
+  --hi:#FFD84A; --hi-ink:#121A21; --btn-bg:#FFD84A; --btn-fg:#121A21; --bar:#3A4B58;
+  --ok:#4CC38A; --warn:#F0A04B; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:400 15px/1.55 var(--font-body);margin:0;word-break:keep-all;overflow-wrap:break-word;
+  padding-block:18px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{max-width:720px;margin:0 auto}
+h1,h2,h3,p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)} .small{font-size:13px}
+
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.brand{font-family:var(--font-display);font-size:18px;letter-spacing:.06em}
+.today{font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+.hero{font-family:var(--font-display);font-weight:400;font-size:clamp(30px,8.4vw,46px);line-height:1.22;margin:18px 0 10px;text-wrap:balance}
+mark{background:linear-gradient(transparent 14%,var(--hi) 14%,var(--hi) 92%,transparent 92%);color:var(--hi-ink);padding:0 .1em}
+.sub{color:var(--muted);max-width:48ch}
+
+.tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;padding:3px;margin:22px 0 18px;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.tab{border:0;background:none;color:var(--muted);font-weight:500;font-size:14px;padding:10px 4px;min-height:44px;border-radius:7px;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--btn-bg);color:var(--btn-fg)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:16px}
+.card+.card,.card+.sec-label,.sec-label+.card{margin-top:16px}
+.card h2{font-size:18px;font-weight:600}
+.sec-label{margin-top:28px;font-size:12px;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.fld{display:grid;gap:6px;min-width:0}
+.fld>span,.lbl{font-size:13px;font-weight:600}
+input,select,textarea{background:var(--field);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-height:44px;width:100%;min-width:0}
+textarea{resize:vertical;min-height:72px}
+.row2{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--field);border:1px solid var(--line);border-radius:8px;padding:8px 12px;min-height:40px;cursor:pointer;font-size:14px}
+.chip[aria-pressed="true"]{background:var(--hi);color:var(--hi-ink);border-color:transparent;font-weight:600}
+.chip.ex{border-style:dashed}
+.btn{background:var(--btn-bg);color:var(--btn-fg);border:0;border-radius:8px;padding:11px 18px;min-height:46px;font-weight:600;cursor:pointer}
+.btn.ghost{background:none;color:var(--fg);border:1px solid var(--line)}
+.btn[disabled]{opacity:.55;cursor:default}
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.add{display:flex;gap:8px;align-items:center}
+.add input{flex:1}
+.x{flex:none;width:44px;height:44px;border:0;background:none;color:var(--muted);font-size:20px;line-height:1;cursor:pointer;border-radius:8px}
+.x:hover{color:var(--fg)}
+.note{font-size:13.5px;border:1px solid var(--line);background:var(--field);border-radius:8px;padding:10px 12px}
+.note b{margin-right:6px}
+.note.warn b{color:var(--warn)} .note.ok b{color:var(--ok)}
+
+.badge{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.04em;border:1px solid var(--line);border-radius:4px;padding:1px 7px;color:var(--muted)}
+.badge.ai{background:var(--hi);color:var(--hi-ink);border-color:transparent}
+.plan{display:grid;gap:18px}
+.plan-head{display:grid;gap:8px}
+.plan-title{font-family:var(--font-display);font-weight:400;font-size:26px;line-height:1.25;text-wrap:balance}
+.range{font-size:13px;color:var(--muted)}
+.progress{height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+.progress>i{display:block;height:100%;background:var(--btn-bg);transition:width .25s}
+.plan h3{font-size:13px;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.day{display:grid;grid-template-columns:64px minmax(0,1fr);gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.day-date{font-family:var(--font-mono);font-size:12px;color:var(--muted);display:grid;gap:2px;align-content:start}
+.day-date b{font-size:20px;font-weight:500;color:var(--fg)}
+.tag{display:inline-block;width:fit-content;font-family:var(--font-body);font-size:11px;font-weight:600;padding:1px 6px;border-radius:4px;background:var(--line);color:var(--fg)}
+.tag.now{background:var(--hi);color:var(--hi-ink)}
+.tag.late{color:var(--warn)}
+.row{display:flex;align-items:flex-start;gap:4px}
+.row .chk{flex:1;min-width:0;display:flex;gap:10px;align-items:flex-start;padding:8px 0;cursor:pointer}
+.chk input{width:20px;height:20px;min-height:0;padding:0;margin:2px 0 0;flex:none;accent-color:var(--btn-bg)}
+.chk .main{display:grid;gap:1px;min-width:0}
+.chk .task{overflow-wrap:anywhere}
+.chk .meta{font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+.row.done .task{text-decoration:line-through;color:var(--muted)}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
+.list{display:grid;gap:4px;align-content:start;min-width:0}
+.list .add{margin-top:8px}
+details.resch{padding:0;gap:0}
+details.resch summary{cursor:pointer;padding:16px 18px;font-weight:600;min-height:48px}
+details.resch .body{display:grid;gap:14px;padding:0 18px 18px}
+.blocked{display:flex;flex-wrap:wrap;gap:8px}
+.blocked .chip{display:flex;align-items:center;gap:6px;padding:4px 4px 4px 12px}
+.blocked .x{width:32px;height:32px;font-size:16px}
+
+.plan-row{display:grid;gap:8px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;cursor:pointer;margin-top:12px}
+.plan-row .t{font-weight:600;font-size:16px;overflow-wrap:anywhere}
+.plan-row .meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px;color:var(--muted)}
+.back{background:none;border:0;padding:8px 0;min-height:44px;font-weight:600;cursor:pointer;margin-bottom:6px}
+.empty{padding:28px 8px;text-align:center;color:var(--muted);display:grid;gap:14px;justify-items:center}
+.scroll{overflow-x:auto}
+table.matrix{border-collapse:collapse;width:100%;min-width:320px}
+.matrix th,.matrix td{padding:6px 6px;text-align:left;font-size:13px;font-weight:600;vertical-align:middle}
+.matrix td select{min-height:40px;padding:6px 8px}
+.matrix thead th{color:var(--muted);font-weight:600}
+.bar-row{display:grid;grid-template-columns:minmax(64px,28%) minmax(0,1fr) 38px;gap:10px;align-items:center;margin-top:10px}
+.bar-name{overflow-wrap:anywhere;font-size:14px}
+.bar{height:14px;background:var(--line);border-radius:4px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--bar)}
+.bar-row.lead .bar i{background:var(--btn-bg)}
+.bar-row.lead .bar-name{font-weight:600}
+.bar-val{text-align:right;font-size:13px}
+.verdict{font-weight:600}
+.foot{margin-top:32px;font-size:12px;color:var(--muted)}
+.card .t-title{font-family:var(--font-display);font-weight:400;font-size:24px;line-height:1.3;text-wrap:balance}
+.rewards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.reward{display:flex;align-items:center;min-height:56px;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--field);font-weight:600}
+.steps{margin:0;padding:0;list-style:none;display:grid;gap:14px;counter-reset:s}
+.steps li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;counter-increment:s}
+.steps li::before{content:counter(s);display:grid;place-items:center;width:28px;height:28px;border-radius:6px;background:var(--hi);color:var(--hi-ink);font-family:var(--font-mono);font-weight:500}
+.steps b{display:block}
+a.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+textarea.sum{font-family:var(--font-mono);font-size:12.5px;min-height:130px}
+.inline{display:flex;gap:10px;align-items:center;min-height:44px;cursor:pointer}
+.inline input{width:20px;height:20px;min-height:0;padding:0;accent-color:var(--btn-bg)}
+.boot{max-width:34ch;margin:18vh auto 0;display:grid;gap:10px;text-align:center}
+.boot b{font-family:var(--font-display);font-weight:400;font-size:28px}
+.boot span{color:var(--muted)}
+/* 상세 일정 */
+.tt{display:grid;grid-template-columns:56px minmax(0,1fr);gap:10px;margin-top:12px}
+.tt-time{display:grid;align-content:start;gap:2px;font-size:12px;color:var(--muted);padding-top:16px}
+.tt-time b{font-size:16px;font-weight:500;color:var(--fg)}
+.tt-body{padding:14px;gap:14px;min-width:0}
+.gap{margin:10px 0 0 66px;font-size:12px;color:var(--muted);border-left:2px dashed var(--line);padding-left:10px}
+@media (prefers-reduced-motion:reduce){.progress>i{transition:none}}
+</style>
+
+
+<style id="onboarding-visual-refresh">
+body:not(.ob-started){background:radial-gradient(ellipse at 50% 0%,#fff1b8 0%,#f2f5f7 48%,#e8eef2 100%)}
+#onboarding{max-width:760px;margin:0 auto;padding:clamp(30px,7vh,68px) 0 48px}
+#onboarding .ob-kicker{display:inline-flex;align-items:center;gap:8px;background:#12202B;color:#fff;padding:8px 13px;border-radius:999px;font:700 11px/1.2 ui-monospace,monospace;letter-spacing:.1em;box-shadow:0 6px 0 rgba(18,32,43,.08)}
+#onboarding h1{font-family:var(--font-display);font-size:clamp(27px,6.2vw,39px);line-height:1.24;letter-spacing:-.025em;margin:18px 0 10px;color:#12202B}
+#onboarding h1 mark{padding:0 .14em;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+#onboarding .ob-desc{font-size:14px;color:#52616c;margin-bottom:22px}
+#onboarding .ob-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#onboarding .ob-option{position:relative;display:flex;gap:13px;align-items:flex-start;text-align:left;width:100%;min-height:126px;padding:18px 16px;background:rgba(255,255,255,.96);border:2px solid #dce3e8;border-radius:18px;cursor:pointer;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease;background-size:100% 100%}
+#onboarding .ob-option:hover{transform:translateY(-3px);border-color:#aab8c2;box-shadow:0 8px 0 rgba(18,32,43,.08)}
+#onboarding .ob-option[aria-pressed="true"]{border:3px solid #12202B;padding:17px 15px;background:#fff8d9;box-shadow:0 6px 0 #ffd84a;transform:translateY(-2px)}
+#onboarding .ob-option[aria-pressed="true"]::after{content:"선택됨";position:absolute;right:12px;top:10px;background:#12202B;color:#fff;border-radius:999px;padding:4px 8px;font-size:10px;font-weight:700}
+#onboarding .ob-num{display:grid;place-items:center;flex:0 0 40px;height:40px;border-radius:11px;background:#ffd84a;color:#12202B;font:800 20px/1 ui-monospace,monospace;box-shadow:inset 0 -3px 0 rgba(18,32,43,.1)}
+#onboarding .ob-option[aria-pressed="true"] .ob-num{background:#12202B;color:#ffd84a}
+#onboarding .ob-copy{display:grid;gap:7px;padding-top:2px;padding-right:2px}
+#onboarding .ob-copy strong{font-size:14px;line-height:1.5;font-weight:750}
+#onboarding .ob-copy small{font-size:11px;line-height:1.5;color:#64727c}
+#onboarding .ob-next{width:100%;min-height:58px;margin-top:24px;border-radius:14px;background:#12202B;color:#fff;font-size:17px;font-weight:800;letter-spacing:.01em;box-shadow:0 6px 0 #ffd84a;transition:transform .15s ease,background .15s ease,box-shadow .15s ease}
+#onboarding .ob-next:not(:disabled):hover{transform:translateY(-2px);background:#263b4a}
+#onboarding .ob-next:disabled{opacity:.42;box-shadow:none;cursor:not-allowed}
+#onboarding .ob-hint{text-align:center;font-size:12px;color:#687782;margin-top:14px}
+@media(max-width:560px){
+ #onboarding{padding-top:30px}
+ #onboarding .ob-options{grid-template-columns:1fr;gap:10px}
+ #onboarding .ob-option{min-height:98px;padding:14px}
+ #onboarding .ob-option[aria-pressed="true"]{padding:13px}
+ #onboarding .ob-num{flex-basis:38px;height:38px;font-size:19px}
+ #onboarding .ob-copy strong{font-size:13px}
+ #onboarding .ob-desc{font-size:13px}
+}
+@media(prefers-reduced-motion:reduce){#onboarding .ob-option,#onboarding .ob-next{transition:none}}
+/* ===== EZ PLAN 인트로 + 설문 통계 화면 ===== */
+#ez-intro[hidden],#ez-stat[hidden],#onboarding[hidden]{display:none!important}
+#ez-intro,#ez-stat{max-width:760px;margin:0 auto;padding:clamp(30px,7vh,68px) 20px 48px;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;justify-content:center;text-align:center}
+#ez-intro .ez-logo{font-family:var(--font-display);font-weight:900;font-size:clamp(60px,18vw,112px);line-height:1;letter-spacing:-.04em;margin:0 0 clamp(28px,6vh,52px);display:flex;justify-content:center;align-items:baseline;gap:.08em}
+#ez-intro .ez-logo .ez{background:#ffd84a;padding:.04em .2em .08em;border-radius:.2em;box-shadow:0 .07em 0 #12202B}
+#ez-intro .ez-q{font-family:var(--font-display);font-size:clamp(24px,5.6vw,36px);line-height:1.3;letter-spacing:-.025em;font-weight:800;margin:0 0 8px}
+#ez-intro .ez-sub{font-size:14px;color:#52616c;margin:0 0 26px}
+#ez-intro .ez-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;max-width:520px;width:100%;margin:0 auto}
+#ez-intro .ez-btn{min-height:84px;border-radius:18px;border:3px solid #12202B;background:#fff;color:#12202B;font-size:clamp(22px,5vw,28px);font-weight:900;cursor:pointer;box-shadow:0 6px 0 #12202B;transition:transform .15s ease,box-shadow .15s ease}
+#ez-intro .ez-btn.yes{background:#ffd84a}
+#ez-intro .ez-btn:hover{transform:translateY(-3px);box-shadow:0 9px 0 #12202B}
+#ez-intro .ez-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #12202B}
+#ez-stat .ez-kicker{align-self:center;display:inline-flex;background:#12202B;color:#fff;padding:8px 13px;border-radius:999px;font:700 11px/1.2 ui-monospace,monospace;letter-spacing:.14em;box-shadow:0 6px 0 rgba(18,32,43,.08)}
+#ez-stat .ez-lead{font-family:var(--font-display);font-size:clamp(18px,4.2vw,24px);font-weight:700;line-height:1.4;margin:0 0 6px;color:#2c3e4b}
+#ez-stat .ez-big{font-family:var(--font-display);font-weight:900;font-size:clamp(64px,20vw,120px);line-height:1.05;letter-spacing:-.04em;margin:0}
+#ez-stat .ez-big mark{padding:0 .1em;background:#ffd84a}
+#ez-stat .ez-big small{font-size:.38em;font-weight:800;letter-spacing:0;margin-left:.1em}
+#ez-stat .ez-of{font-size:clamp(15px,3.6vw,18px);font-weight:700;color:#52616c;margin:4px 0 24px}
+#ez-stat .ez-card{max-width:560px;width:100%;margin:0 auto;background:rgba(255,255,255,.96);border:2px solid #dce3e8;border-radius:18px;padding:22px 20px;box-shadow:0 5px 0 rgba(18,32,43,.07);text-align:left}
+#ez-stat .ez-bar{height:26px;border-radius:999px;background:#e6ebef;overflow:hidden}
+#ez-stat .ez-bar i{display:block;height:100%;width:0;background:#ffd84a;border-right:3px solid #12202B;border-radius:999px 0 0 999px;transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
+#ez-stat .ez-legend{display:flex;justify-content:space-between;gap:10px;margin-top:12px;font-size:13px;font-weight:700}
+#ez-stat .ez-legend b{font-size:17px;font-weight:900}
+#ez-stat .ez-msg{margin:18px 0 0;font-size:14px;line-height:1.6;color:#2c3e4b}
+#ez-stat .ez-next{width:100%;max-width:560px;min-height:58px;margin:24px auto 0;border-radius:14px;background:#12202B;color:#fff;font-size:17px;font-weight:800;box-shadow:0 6px 0 #ffd84a;border:0;transition:transform .15s ease,background .15s ease}
+#ez-stat .ez-next:hover{transform:translateY(-2px);background:#263b4a}
+#ez-stat .ez-back{margin:14px auto 0;background:none;border:0;color:#687782;font-size:13px;cursor:pointer;text-decoration:underline}
+@media(max-width:560px){#ez-intro .ez-btn{min-height:76px}}
+@media(prefers-reduced-motion:reduce){#ez-intro .ez-btn,#ez-stat .ez-next,#ez-stat .ez-bar i{transition:none}}
+</style>
+
+</head>
+<body>
+
+<section id="ez-intro" aria-labelledby="ez-q">
+  <div class="ez-logo" role="img" aria-label="EZ PLAN"><span class="ez">EZ</span><span>PLAN</span></div>
+  <h1 id="ez-q" class="ez-q" tabindex="-1">플래너, 쓰고 계신가요?</h1>
+  <p class="ez-sub">하나를 눌러 주세요.</p>
+  <div class="ez-choices" role="group" aria-label="플래너 사용 여부">
+    <button class="ez-btn yes" type="button" data-ez-use="yes">쓴다</button>
+    <button class="ez-btn no" type="button" data-ez-use="no">안쓴다</button>
+  </div>
+</section>
+
+<section id="ez-stat" aria-labelledby="ez-stat-title" hidden>
+  <div class="ez-kicker">EZ PLAN · 광주 설문 통계</div>
+  <p class="ez-lead" id="ez-stat-title" tabindex="-1">광주 누적 설문 <b>2,519명</b> 중</p>
+  <p class="ez-big"><mark>1,800</mark><small>명</small></p>
+  <p class="ez-of">이 플래너를 쓰고 있어요</p>
+  <div class="ez-card">
+    <div class="ez-bar" role="img" aria-label="플래너 사용 71.5퍼센트, 미사용 28.5퍼센트"><i id="ez-bar-fill"></i></div>
+    <div class="ez-legend"><span>쓴다 <b>1,800명</b> · 71.5%</span><span>안쓴다 <b>719명</b> · 28.5%</span></div>
+    <p class="ez-msg" id="ez-msg"></p>
+  </div>
+  <button id="ez-stat-next" class="ez-next" type="button">다음으로 →</button>
+  <button id="ez-stat-back" class="ez-back" type="button">← 다시 고르기</button>
+</section>
+
+<script id="ez-intro-logic">
+(() => {
+  const intro = document.getElementById("ez-intro");
+  const stat = document.getElementById("ez-stat");
+  const app = document.getElementById("app");
+  const fill = document.getElementById("ez-bar-fill");
+  const msg = document.getElementById("ez-msg");
+  const MSG = {
+    yes: "플래너를 쓰는 71.5%에 속하시네요. EZ PLAN이 계획 짜는 번거로움을 더 줄여 드릴게요.",
+    no: "안 쓰는 28.5%에 속하시네요. 귀찮은 계획은 EZ PLAN이 대신 짜 드릴게요."
+  };
+  document.querySelectorAll("[data-ez-use]").forEach(btn => btn.addEventListener("click", () => {
+    const v = btn.dataset.ezUse;
+    document.body.dataset.usesPlanner = v;
+    msg.textContent = MSG[v];
+    fill.style.width = "0";
+    intro.hidden = true; stat.hidden = false;
+    window.scrollTo(0, 0);
+    document.getElementById("ez-stat-title").focus({preventScroll:true});
+    requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.width = (1800/2519*100).toFixed(1) + "%"; }));
+  }));
+  document.getElementById("ez-stat-next").addEventListener("click", () => {
+    document.body.classList.add("ob-started");
+    stat.hidden = true;
+    if (app) {
+      app.hidden = false;
+      app.style.display = "block";
+      app.setAttribute("tabindex", "-1");
+      app.focus({preventScroll:true});
+    }
+    window.scrollTo(0, 0);
+  });
+  document.getElementById("ez-stat-back").addEventListener("click", () => {
+    stat.hidden = true; intro.hidden = false;
+    window.scrollTo(0, 0);
+    document.getElementById("ez-q").focus({preventScroll:true});
+  });
+})();
+</script>
+
+<main id="app" hidden style="display:none"><style id="sxcss">.sx .hid{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}
+.sx .pane,.sx .plan-s,.sx .dplan{display:none}
+.sx label.tab{display:grid;place-items:center;text-align:center}
+.sx .tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+.sx label.chip{display:inline-flex;align-items:center;cursor:pointer}
+.sx .chk input:checked+.main .task{text-decoration:line-through;color:var(--muted)}
+.sx .card+.card{margin-top:16px}
+.sx .plan-head{margin-bottom:6px}
+.sx .plan-s,.sx .dplan{counter-reset:done}
+.sx .plan-s input:checked,.sx .dplan input:checked{counter-increment:done}
+.sx .dplan{flex-direction:column}
+.sx .plan-s{flex-direction:column;gap:18px}
+.sx .plan-head{order:-2}.sx .dplan .range{order:-2}
+.sx .prog{order:-1;margin:0;font-family:var(--font-mono);font-size:13px;color:var(--muted)}
+.sx .dplan .prog{margin-top:8px}
+.sx .prog::before{content:"완료 " counter(done) " / " attr(data-t)}
+#s1:checked~.panes .p1{display:block}#s1:checked~.tabs label[for=s1]{background:var(--btn-bg);color:var(--btn-fg)}#s2:checked~.panes .p2{display:block}#s2:checked~.tabs label[for=s2]{background:var(--btn-bg);color:var(--btn-fg)}#s3:checked~.panes .p3{display:block}#s3:checked~.tabs label[for=s3]{background:var(--btn-bg);color:var(--btn-fg)}
+</style>
+<h1 class="hero">귀찮은 계획은 <mark>EASYDAY</mark>가.</h1>
+<p class="sub">목표와 조건만 적으면 날짜별 일정과 체크리스트를 만들어 드려요. 일정이 바뀌면 남은 계획을 다시 맞춰요.</p>
+<input class="hid" type="radio" name="sx-tab" id="s1" checked aria-label="계획 만들기"><input class="hid" type="radio" name="sx-tab" id="s2" aria-label="상세 일정"><div class="tabs" role="tablist" aria-label="메뉴"><label class="tab" for="s1">새 계획</label><label class="tab" for="s2">상세 일정</label></div><div class="panes"><section class="pane p1">...생략...</section><section class="pane p2">...생략...</section></div></main>
+
+</body>
+</html>
